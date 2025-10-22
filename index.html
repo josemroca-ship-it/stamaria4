@@ -166,7 +166,7 @@
   <footer>Desarrollado con 🧠 x Megafy</footer>
 
 <script type="module">
-  // Espera a que el web component esté definido
+  // Espera a que el web component esté listo
   await customElements.whenDefined('openai-chatkit');
 
   // Función para obtener/renovar el client_secret
@@ -178,31 +178,28 @@
       body: existing ? JSON.stringify({ currentClientSecret: existing }) : null
     });
     if (!res.ok) throw new Error(`Token ${res.status}: ${await res.text()}`);
-    const json = await res.json();
-    if (!json?.client_secret) throw new Error("Sin client_secret en la respuesta");
-    return json.client_secret;
+    const { client_secret } = await res.json();
+    if (!client_secret) throw new Error("Sin client_secret en la respuesta");
+    return client_secret;
   }
 
   const chat = document.getElementById("chat");
 
-  // Configuración del chat
+  // Opciones soportadas (sin introMessages)
   chat.setOptions({
     api: { getClientSecret },
-    locale: "es-ES",
-    introMessages: [
-      { role: "assistant", content: "Hola 👋, soy tu asistente de salud de Clínica Santa María. ¿En qué te ayudo hoy?" }
-    ]
+    locale: "es-ES"
   });
 
-  // Enviar un primer mensaje real cuando esté listo
+  // Si quieres “despertar” al agente, manda un primer mensaje de usuario
   chat.addEventListener('chatkit.ready', () => {
     console.log('✅ chatkit.ready');
     setTimeout(() => {
-      chat.sendMessage("Hola, confírmame por favor que estás activo y responde en español.");
+      chat.sendMessage("Hola 👋, ¿puedes saludarme en español?");
     }, 600);
   });
 
-  // Debug útil
+  // Logs útiles
   chat.addEventListener('chatkit.messageadded', (e) => {
     console.log('💬 messageadded', e.detail);
   });
