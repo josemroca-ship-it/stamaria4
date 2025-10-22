@@ -181,10 +181,40 @@
       return client_secret;
     }
 
-    const chat = document.getElementById("chat");
-    chat.setOptions({
-      api: { getClientSecret },
-      locale: "es-ES"
+await customElements.whenDefined('openai-chatkit');
+const chat = document.getElementById("chat");
+
+chat.setOptions({
+  api: { getClientSecret },
+  locale: "es-ES",
+  introMessages: [
+    { role: "assistant", content: "Hola 👋, soy tu asistente de salud de Clínica Santa María. ¿En qué te ayudo hoy?" }
+  ]
+});
+
+// 👉 Enviar saludo real al agente cuando esté listo
+chat.addEventListener('chatkit.ready', () => {
+  console.log('✅ chatkit.ready');
+  setTimeout(() => {
+    chat.sendMessage("Hola, confírmame por favor que estás activo y responde en español.");
+  }, 600);
+});
+
+// ⏱️ Si en 8s no empieza la respuesta, muestro ayuda
+let responseTimer;
+chat.addEventListener('chatkit.responsestart', () => clearTimeout(responseTimer));
+chat.addEventListener('chatkit.ready', () => {
+  responseTimer = setTimeout(() => {
+    chat.addMessage({
+      role: "assistant",
+      content: "Estoy teniendo un retraso para responder. Si necesitas agendar, escribe: *agendar hora*. Si buscas coberturas, escribe: *cobertura*."
+    });
+  }, 8000);
+});
+
+// Debug útil
+chat.addEventListener('chatkit.messageadded', (e) => console.log('💬', e.detail));
+chat.addEventListener('chatkit.error', (e) => console.error('❌ chatkit.error', e.detail || e));
     });
   </script>
 </body>
